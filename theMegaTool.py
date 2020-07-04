@@ -5,15 +5,15 @@ import random
 
 class dndChar:
 
-    _xlsx = pd.ExcelFile("C:/Users/Noah/Documents/5E_CHARACTERSHEETSV3/Characters/CharacterGeneratorV2.xlsx")
+    _xlsx = pd.ExcelFile("CharacterGeneratorV2.xlsx")
     _rDataMaster = pd.read_excel(_xlsx,'Race')
     _cDataMaster = pd.read_excel(_xlsx,'Class')
     _bDataMaster = pd.read_excel(_xlsx,'Background')
-    _sfile = open('C:/Users/Noah/Documents/5E_CHARACTERSHEETSV3/Characters/SNames.txt')
+    _sfile = open('SNames.txt')
     _snamesfile = [line.replace('\n','') for line in _sfile]
-    _mfile = open('C:/Users/Noah/Documents/5E_CHARACTERSHEETSV3/Characters/MNames.txt')
+    _mfile = open('MNames.txt')
     _mnamesfile = [line.replace('\n','') for line in _mfile]
-    _ffile = open('C:/Users/Noah/Documents/5E_CHARACTERSHEETSV3/Characters/FNames.txt')
+    _ffile = open('FNames.txt')
     _fnamesfile = [line.replace('\n','') for line in _ffile]
     _statsMaster = ['strength','dexterity','constitution','intelligence','wisdom','charisma']
 
