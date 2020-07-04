@@ -32,12 +32,20 @@ class dndChar:
                       'wisdom': 0, 
                       'charisma': 0}
         self.multiclass = [None,None]
+        self.mclassRef = 0
         self.startingHP = 0
         self.rData = pd.DataFrame()
         self.cData = pd.DataFrame()
         self.bData = pd.DataFrame()
         self._cDataBackup = pd.DataFrame()
 
+    def listCharacterSources(self):
+        sourcelist = set()
+        sourcelist.add(self.cData.iloc[self.classRef][2])
+        sourcelist.add(self.bData.iloc[self.backRef][1])
+        sourcelist.add(self.rData.iloc[self.raceRef][2])
+        return sourcelist
+    
     def listUsedSources(self):
         """
         Lists sourcebooks generator pulls from
@@ -54,7 +62,7 @@ class dndChar:
         """
         Lists sources not currently being used
         """
-        sourcelist = set('')
+        sourcelist = set()
         if not self.bData.empty:
             sourcelist.update(set(self._bDataMaster['Source'].unique()).difference(set(self.bData['Source'].unique())))
         if not self.cData.empty:
@@ -331,7 +339,7 @@ class dndChar:
             for n in self._statsMaster:
                 if str(self.rData.iloc[self.raceRef][n]) != 'nan':
                     self.stats[n] += int(self.rData.iloc[self.raceRef][n])
-            self._setStartingHP()
+            self.__setStartingHP()
         else:
             if self.race == ['Human']:
                 statArrays = [[15, 13, 13, 13, 11, 8],
@@ -351,7 +359,7 @@ class dndChar:
                 for n in allStats:
                     self.stats[n] = statArray[0]+1
                     statArray.pop(0)
-                self._setStartingHP()
+                self.__setStartingHP()
             elif self.race == ['Half-Elf'] or self.race == ['Aetherborn']:
                 statArrays = []
                 if highStat == 'charisma' or twoStat == 'charisma':
@@ -366,7 +374,7 @@ class dndChar:
                     for n in allStats:
                         self.stats[n] = statArray[0]
                         statArray.pop(0)
-                    self._setStartingHP()
+                    self.__setStartingHP()
                 else:
                     statArrays = [[16,16,14,10,8,8],
                                   [16,14,14,12,10,8]]
@@ -381,7 +389,7 @@ class dndChar:
                         if n == 'charisma':
                             self.stats[n] += 2
                         statArray.pop(0)
-                    self._setStartingHP()
+                    self.__setStartingHP()
             else:
                 statArrays = [[14, 14, 14, 12, 10, 8],
                               [14, 14, 14, 10, 10, 10],
@@ -410,7 +418,7 @@ class dndChar:
                     statArray.pop(0)
                     if str(self.rData.iloc[self.raceRef][n]) != 'nan':
                         self.stats[n] += int(self.rData.iloc[self.raceRef][n])
-                self._setStartingHP()
+                self.__setStartingHP()
 
     def resetStats(self):
         """
@@ -427,7 +435,23 @@ class dndChar:
         """
         Adds a random secondary class which the character qualifies for
         """
-        pass
+        qualifiedStats = self._statsMaster.copy()
+        for n in self._statsMaster:
+            if self.stats[n] < 13:
+                qualifiedStats.remove(n)
+        if len(qualifiedStats) == 0:
+            raise Exception('Character qualifies for no multiclass')
+        mcData = self._cDataBackup.copy()
+        for k in range(len(mcData.index)):
+            if (not set(str(mcData.iloc[k]['Multiclass Req']).split()).issubset(qualifiedStats)) or (mcData.iloc[k]['Class'] == self.gameClass[1]):
+                mcData.at[k,'Multiclass Req'] = 'Removal'
+        mcData = mcData.drop(mcData[mcData['Multiclass Req'] == 'Removal'].index)
+
+        if mcData.empty:
+            raise Exception('Character qualifies for no multiclass')
+        else:
+            self.mclassRef = sc.randbelow(len(mcData.index))
+            self.multiclass = [mcData.iloc[self.mclassRef]['Subclass'], mcData.iloc[self.mclassRef]['Class']]
 
     def addMulticlass(self,chosenClass,chosenSubclass):
         """
@@ -446,6 +470,7 @@ class dndChar:
         Removes any secondary classes the character may have
         """
         self.multiclass = [None,None]
+        self.mclassRef = 0
 
     def generateName(self, gender=2):
         """
@@ -489,7 +514,7 @@ class dndChar:
         self.multiclass = [None,None]
         self.startingHP = 0
 
-    def _setStartingHP(self):
+    def __setStartingHP(self):
         """
         Sets the starting HP of the character
         """
